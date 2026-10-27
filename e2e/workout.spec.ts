@@ -196,8 +196,8 @@ test('backup: eksport, slet alt, import giver de samme data', async ({ page }) =
 
   await page.getByRole('button', { name: 'Slet alle data' }).click();
   await page.getByLabel('Skriv SLET for at bekræfte').fill('SLET');
-  await page.getByRole('dialog').getByRole('button', { name: 'Slet alle data' }).click();
-  await page.waitForLoadState('load');
+  // Appen genindlæser sig selv efter sletningen. Vent på det, før vi går videre.
+  await Promise.all([page.waitForEvent('load'), page.getByRole('dialog').getByRole('button', { name: 'Slet alle data' }).click()]);
   await page.goto('./#/history');
   await expect(page.getByText('Ingen træninger endnu.')).toBeVisible();
 

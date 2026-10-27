@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Sheet, useDialogs } from '../components/Sheet';
 import { REST_OPTIONS } from '../components/ExerciseForm';
+import { GitHubBackup } from '../components/GitHubBackup';
 import { Button, Header, inputClass, Page, Segmented } from '../components/ui';
 import { db } from '../db/db';
 import type { Settings } from '../db/types';
@@ -183,6 +184,10 @@ export function SettingsPage() {
               />
             </div>
           </Row>
+        </Group>
+
+        <Group title="Automatisk backup til GitHub">
+          <GitHubBackup />
         </Group>
 
         <Group title="Data">

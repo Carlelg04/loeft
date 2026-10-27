@@ -5,6 +5,7 @@ import { db } from '../db/db';
 import type { Routine } from '../db/types';
 import { relativeDay } from '../lib/dates';
 import { exportBackupFile } from '../lib/exporter';
+import { useSyncState } from '../lib/githubSync';
 import { formatClock } from '../lib/units';
 import { useNow } from '../lib/useNow';
 import { useExerciseMap } from '../state/exercises';
@@ -34,27 +35,50 @@ export function TrainPage() {
   const now = useNow(active ? 1000 : 60000);
   const { toast } = useDialogs();
 
-  const backupDue =
-    workoutCount > 0 && (!settings.lastBackupAt || now - settings.lastBackupAt > BACKUP_DAYS * 86400000);
+  const sync = useSyncState();
+  // Automatisk backup tæller som backup. Står den fast (fx uden net i ugevis), dukker påmindelsen op igen.
+  const lastSafe = Math.max(settings.lastBackupAt ?? 0, sync.config ? (sync.lastSyncAt ?? 0) : 0);
+  const syncBroken = !!sync.config && !!sync.lastError;
+  const backupDue = !syncBroken && workoutCount > 0 && (!lastSafe || now - lastSafe > BACKUP_DAYS * 86400000);
 
   return (
     <>
       <Header title="Træn" />
       <Page>
-        {backupDue && (
-          <div className="mt-4 flex items-center gap-3 rounded-card border border-line px-4 py-3">
-            <p className="flex-1 text-[15px] text-muted">
-              {settings.lastBackupAt ? `Seneste backup ${relativeDay(settings.lastBackupAt, now)}.` : 'Du har ikke taget en backup endnu.'}
+        {syncBroken && (
+          <div role="alert" className="mt-4 flex flex-col gap-2 rounded-card border border-danger px-4 py-3">
+            <p className="text-[15px]">
+              <span className="font-semibold text-danger">Automatisk backup virker ikke. </span>
+              <span className="text-muted">{sync.lastError}</span>
             </p>
-            <Button
-              size="sm"
-              onClick={async () => {
-                const r = await exportBackupFile();
-                if (r !== 'cancelled') toast({ message: 'Backup gemt' });
-              }}
-            >
-              Tag backup
-            </Button>
+            <div>
+              <Button size="sm" onClick={() => navigate('/settings')}>
+                Åbn indstillinger
+              </Button>
+            </div>
+          </div>
+        )}
+        {backupDue && (
+          <div className="mt-4 flex flex-col gap-2 rounded-card border border-line px-4 py-3">
+            <p className="text-[15px] text-muted">
+              {lastSafe ? `Seneste backup ${relativeDay(lastSafe, now)}.` : 'Du har ikke taget en backup endnu.'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                onClick={async () => {
+                  const r = await exportBackupFile();
+                  if (r !== 'cancelled') toast({ message: 'Backup gemt' });
+                }}
+              >
+                Tag backup
+              </Button>
+              {!sync.config && (
+                <Button size="sm" tone="ghost" onClick={() => navigate('/settings')}>
+                  Slå automatisk backup til
+                </Button>
+              )}
+            </div>
           </div>
         )}
 

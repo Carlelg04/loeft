@@ -23,8 +23,10 @@ const dateTimeFmt = new Intl.DateTimeFormat(LOCALE, { weekday: 'short', day: 'nu
 const dateFmt = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' });
 const monthFmt = new Intl.DateTimeFormat(LOCALE, { month: 'long', year: 'numeric' });
 const shortDateFmt = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short' });
+const timeFmt = new Intl.DateTimeFormat(LOCALE, { hour: '2-digit', minute: '2-digit' });
 
 export const formatDateTime = (t: number) => dateTimeFmt.format(t);
+export const formatTime = (t: number) => timeFmt.format(t);
 export const formatDate = (t: number) => dateFmt.format(t);
 export const formatShortDate = (t: number) => shortDateFmt.format(t);
 export function formatMonth(t: number): string {

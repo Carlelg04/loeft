@@ -51,8 +51,22 @@ Vil du have et privat repo gratis, så brug Netlify eller Cloudflare Pages. Byg-
 
 ## Backup og ny telefon
 
-Indstillinger (tandhjulet på Statistik), derefter **Eksportér backup**. På iPhone åbner delingsmenuen, vælg "Gem i Filer".
-Appen minder dig om det på Træn-fanen, når der er gået 14 dage.
+### Automatisk backup til GitHub (anbefalet)
+
+Appen sender selv en backup til et **privat** GitHub-repo, hver gang du gemmer en træning eller ændrer en rutine eller øvelse. Sæt under en igangværende træning sendes ikke. Uden net venter den og sender, når nettet er tilbage. Hver backup bliver en commit, så du kan gå tilbage til enhver tidligere version.
+
+1. Opret et privat repo, fx `loeft-data`, på https://github.com/new.
+2. Lav en adgangsnøgle på https://github.com/settings/personal-access-tokens/new: "Only select repositories", kun `loeft-data`, Permissions: Contents "Read and write". Vælg så lang udløbstid som muligt.
+3. I appen: Statistik, tandhjulet, **Automatisk backup til GitHub**. Indsæt repo og nøgle, og tryk Forbind.
+
+Nøglen gemmes kun på telefonen og kommer aldrig med i backup-filer. Appen nægter at bruge et offentligt repo. Udløber nøglen, viser Træn-fanen en advarsel. Lav så en ny nøgle og forbind igen.
+
+Ny telefon: installér appen, forbind til det samme repo, og vælg **Hent mine data**.
+
+### Manuel backup-fil
+
+Indstillinger, derefter **Eksportér backup**. På iPhone åbner delingsmenuen, vælg "Gem i Filer".
+Uden automatisk backup minder appen dig om det på Træn-fanen, når der er gået 14 dage.
 
 Ny telefon: installér appen, gå til Indstillinger, **Importér backup**, og vælg filen.
 
@@ -61,5 +75,6 @@ Ny telefon: installér appen, gå til Indstillinger, **Importér backup**, og v�
 - Datalaget er Dexie (IndexedDB), se `src/db/`. Al vægt gemmes i kg.
 - **Hver ændring af skemaet** får et nyt `version(n)` med en `upgrade()`-funktion i `src/db/db.ts`. Slet aldrig tabeller eller felter med data. Hæv `SCHEMA_VERSION`, og migrér gamle backups i `src/lib/backupParse.ts`.
 - Beregninger (1RM, volumen, rekorder, "Forrige") ligger som rene funktioner i `src/lib/calc.ts` og `src/lib/sets.ts` med tests i `tests/`.
+- GitHub-backuppen ligger i `src/lib/githubSync.ts`. Dexie-hooks markerer ændringer i rutiner, øvelser og afsluttede træninger, og filen sendes kun, hvis dens git-SHA er ændret.
 - Opdateringer genindlæser aldrig appen af sig selv. Brugeren får en knap, og den vises ikke under en træning.
 - Ikonerne laves med `node scripts/make-icons.mjs`.
