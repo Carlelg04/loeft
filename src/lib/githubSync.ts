@@ -104,11 +104,12 @@ export async function syncContent(d: LoeftDB = db): Promise<{ text: string; back
 
 export class SyncError extends Error {}
 
+// Kun headers, som GitHub tillader fra en browser (CORS). X-GitHub-Api-Version er ikke på listen,
+// og uden den bruger GitHub standardversionen 2022-11-28.
 function headers(token: string, raw = false): HeadersInit {
   return {
     Authorization: `Bearer ${token}`,
     Accept: raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28',
   };
 }
 

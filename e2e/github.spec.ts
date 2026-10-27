@@ -2,6 +2,16 @@ import { createHash } from 'node:crypto';
 import { expect, test, type Page } from '@playwright/test';
 
 const REPO = 'me/loeft-data';
+const GITHUB_CORS_HEADERS = [
+  'Authorization',
+  'Content-Type',
+  'If-Match',
+  'If-Modified-Since',
+  'If-None-Match',
+  'If-Unmodified-Since',
+  'X-GitHub-OTP',
+  'X-Requested-With',
+];
 const TOKEN = 'github_pat_test_123';
 
 interface FakeRepo {
@@ -21,13 +31,17 @@ async function fakeGitHub(page: Page, opts: { status?: number; isPublic?: boolea
     const req = route.request();
     const cors = {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': '*',
-      'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
+      // Samme liste som GitHub sender til browsere.
+      'Access-Control-Allow-Headers': GITHUB_CORS_HEADERS.join(', '),
+      'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE',
     };
     const json = (status: number, body: unknown) =>
       route.fulfill({ status, headers: cors, contentType: 'application/json', body: JSON.stringify(body) });
     if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
     expect(req.headers()['authorization']).toBe(`Bearer ${TOKEN}`);
+    // Headers, som en browser ellers ville stoppe ved GitHubs CORS-tjek.
+    const custom = Object.keys(await req.allHeaders()).filter((h) => h.startsWith('x-') && !GITHUB_CORS_HEADERS.map((x) => x.toLowerCase()).includes(h));
+    expect(custom).toEqual([]);
     if (opts.status) return json(opts.status, { message: 'nope' });
     const path = new URL(req.url()).pathname;
     if (path === `/repos/${REPO}`) return json(200, { private: !opts.isPublic, permissions: { push: true } });
